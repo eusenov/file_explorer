@@ -1,63 +1,90 @@
 <?php 
-if(!empty($_POST['open']) && !empty($_POST['id']) && $_COOKIE['dir']){
-    $dir = $_COOKIE['dir']; 
-    $subdir = $_POST['id']; 
-    if(dirname($subdir) == '.'){
-        $dir .= "\\" . $subdir; 
-        setcookie('dir', $dir);
-        $arr = getList_files($dir);
-    }
-} else {
-    $dir = __DIR__; 
-    setcookie('dir', $dir);
-    $arr = getList_files($dir);
+if(!empty($_POST['open']) && !empty($_POST['id']) && $_COOKIE['path']){
+    $path = $_COOKIE['path']; 
+    $subpath = $_POST['id'];
+
+    $path .= "\\" . $subpath; 
+    setcookie('path', $path);
+    $arr = createArrOfFiles($path);
+} else if (!empty($_POST['delete']) && !empty($_POST['id']) && $_COOKIE['path']){
+    $path = $_COOKIE['path']; 
+    $path2 = $_COOKIE['path'];
+    $subpath = $_POST['id']; 
+
+    $path2 .= "\\" . $subpath; 
+    remove_path($path2); 
+
+    $arr = createArrOfFiles($path);
+} else if (!empty($_POST['create']) && $_COOKIE['path']){
+    $path = $_COOKIE['path']; 
+    $newpath = $path . '\\' . $_POST['create-name']; 
+    mkdir($newpath, 0777, True);
+    $arr = createArrOfFiles($path); 
+} else if (!empty($_POST['copy']) && !empty($_POST['create-copy']) && !empty($_POST['id']) && $_COOKIE['path']){
+    $path = $_COOKIE['path']; 
+    $subpath = $_POST['id']; 
+
+    $drc = $_POST['create-copy']; 
+    $src = $path . '\\' . $subpath; 
+
+    copy_dir($src, $drc); 
+
+    setcookie('path', $path);
+    $arr = createArrOfFiles($path); 
+} else if (!empty($_POST['back']) && $_COOKIE['path']){
+    $path = removeLastDirectory($_COOKIE['path']); 
+
+    setcookie('path', $path);
+    $arr = createArrOfFiles($path); 
+}else {
+    $path = __DIR__; 
+    setcookie('path', $path);
+    $arr = createArrOfFiles($path);
 }
 
-if (!empty($_POST['delete']) && !empty($_POST['id']) && $_COOKIE['dir']){
-    $dir = $_COOKIE['dir']; 
-    $dir2 = $_COOKIE['dir'];
-    $subdir = $_POST['id']; 
-    if(dirname($subdir) == '.'){
-        $dir .= "\\" . $subdir; 
-        remove_dir($dir); 
+function getprint($el){
+    echo '<pre>';
+    print_r($el); 
+    echo '</pre>';
+}
+
+function copy_dir($src, $drc){
+    $dir = opendir($src);
+    if (!is_dir($drc)) {
+        mkdir($drc, 0777, true);
     }
-    $arr = getList_files($dir2);
-}  
-
-if (!empty($_POST['create']) && $_COOKIE['dir']){
-    $dir = $_COOKIE['dir']; 
-    $newDir = $dir . '\\' . $_POST['create-name']; 
-    mkdir($newDir, 0777, True);
-    $arr = getList_files($dir); 
-}  
-
-if (!empty($_POST['copy']) && !empty($_POST['id']) && $_COOKIE['dir']){
-    $dir = $_COOKIE['dir']; 
-    $subdir = $_POST['id']; 
-   
-    $newDir = $dir . '\\' . $subdir; 
-    mkdir($newDir, 0777, true);
-    $arr = getList_files($dir); 
-} 
-
-function remove_dir($dir){
-    if($objs = glob($dir . '/*')){
+    while (false !== ($file = readdir($dir))) {
+        if ($file != '.' && $file != '..') {
+            if (is_dir($src . '/' . $file)) {
+                copy_dir($src . '/' . $file, $drc . '/' . $file);
+            } else {
+                copy($src . '/' . $file, $drc . '/' . $file);
+            }
+        }
+    }
+    closedir($dir);
+}
+function remove_path($path){
+    if($objs = glob($path . '/*')){
         foreach($objs as $obj){
             if(is_dir($obj)){
-                remove_dir($obj); 
+                remove_path($obj); 
             } else {
                 unlink($obj); 
             }
         }
     } 
-    if(is_dir($dir)){
-        rmdir($dir); 
+    if(is_dir($path)){
+        rmdir($path); 
     }
 }
-function getprint($el){
-    echo '<pre>';
-    print_r($el); 
-    echo '</pre>';
+function removeLastDirectory($path) {
+    $path = rtrim($path, '\\');
+    $pos = strrpos($path, '\\');
+    if ($pos === false) {
+        return $path;
+    }
+    return substr($path, 0, $pos);
 }
 
 function deleteDots($arrOfFiles){
@@ -69,7 +96,7 @@ function deleteDots($arrOfFiles){
 
     return $arrOfFiles; 
 }
-function getList_files($path){
+function createArrOfFiles($path){
     $files = array();
     getprint($path); 
     $dh = opendir($path);
@@ -81,9 +108,13 @@ function getList_files($path){
     closedir($dh);
     return deleteDots($files);
 }
-function ceateExplorerBlock($arr){
 
+function ceateExplorerBlock($arr){
     echo '<div class="explorer__block">'; 
+    echo 
+    "<form class='button' action='exmp.php' method='POST'>
+        <input type='submit' value='Назад' name='back'>
+    </form>"; 
     for ($i=0; $i < count($arr); $i++) { 
         $arr_i = $arr[$i];
         if (strpos($arr_i, '.') == false) {
@@ -94,7 +125,8 @@ function ceateExplorerBlock($arr){
                     <form action='exmp.php' method='POST'>
                         <input type='submit' name='open' id='' value='Открыть'>
                         <input type='submit' name='delete' id='' value='Удалить'>
-                        <input type='submit' name='copy' id='' value='Копировать'>
+                        <input type='text' placeholder='Укажите полный путь для копии' name='create-copy' class='create-copy'>
+                        <input type='submit' value='Копировать' name='copy'>
                         <input type='hidden' name='id' value='$arr[$i]'>
                     </form>
                 </div>
@@ -112,7 +144,7 @@ function ceateExplorerBlock($arr){
         }
     } 
     echo 
-    "<form class='create-button' action='exmp.php' method='POST'>
+    "<form class='button' action='exmp.php' method='POST'>
         <input type='text' placeholder='Введите имя новой папки' name='create-name'>
         <input type='submit' value='Создать' name='create'>
     </form>"; 
@@ -130,26 +162,9 @@ function ceateExplorerBlock($arr){
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
-
-<br>Желательно возвращаться каждый раз к главной директории
-<br>если нужно перейти к соседним друг другу папкам.
-<br>К примеру, если вы были в папке main\test1\test1_1, и вы хотите 
-<br>перейти к папке main\test2. То вам понадобиться путем нажатия кнопки 
-<br>"назад" в браузере вернуться к обзору главной директории, где вы сможете видеть папку "main". 
-<br>И только после этого проделать путь к test2.
-<br>
-<br>В левом верхнем углу описан актуальный путь (помощь в ориентривании из-за
-<br>описанного выше неудобства). Кнопка удаления срабатывает после второго нажатия.
-<br>
-<br>Проект не сделан до конца из-за нехватки времени. Сдаю сейчас с такой запиской по эксплуатации,
-<br>чтобы просто не нарушать срок сдачи.
-<br>
-<br>Панирую довести это задание до ума в ближайшее время.
 
 <div class="explorer">
     <?php ceateExplorerBlock($arr); ?>
-
 </div>
 
 <?php 

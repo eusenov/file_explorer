@@ -22,7 +22,7 @@
     align-items: center;
     justify-content: space-between;
 }
-.create-button{
+.button{
     margin: 20px;
     width: 93%;
     padding: 10px;
@@ -36,4 +36,8 @@
 }
 .file__buttons input {
     font-size: 18   px;
+}
+
+.create-copy{
+    width: 209px;
 }
