@@ -124,9 +124,9 @@ function ceateExplorerBlock($arr){
                 <div class='file__buttons'>
                     <form action='exmp.php' method='POST'>
                         <input type='submit' name='open' id='' value='Открыть'>
-                        <input type='submit' name='delete' id='' value='Удалить'>
                         <input type='text' placeholder='Укажите полный путь для копии' name='create-copy' class='create-copy'>
                         <input type='submit' value='Копировать' name='copy'>
+                        <input type='submit' name='delete' id='' value='Удалить'>
                         <input type='hidden' name='id' value='$arr[$i]'>
                     </form>
                 </div>
