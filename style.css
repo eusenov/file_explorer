@@ -1,0 +1,39 @@
+.explorer {
+    max-width: 70%;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}
+.explorer__block {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+    border-radius: 20px;
+    background-color: rgb(237, 208, 82);
+}
+.file__block {
+    margin: 20px;
+    width: 93%;
+    padding: 10px;
+    border: 3px solid rgb(0, 0, 0);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.create-button{
+    margin: 20px;
+    width: 93%;
+    padding: 10px;
+}
+.span {
+    color: black;
+    font-size: 20px;
+    font-weight: 600;
+}
+.file__buttons {
+}
+.file__buttons input {
+    font-size: 18   px;
+}
